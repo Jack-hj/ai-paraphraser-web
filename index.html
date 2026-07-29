@@ -48,10 +48,7 @@
   </div>
 
   <script>
-    // ⚠️ 配置区域：替换你的配置
-  
-    const TG_HANDLE = "@immortal4875"; // 替换你的 Telegram 用户名
-
+    const TG_HANDLE = "@immortal4875";
     const MAX_DAILY_LIMIT = 3;
 
     function getTodayKey() {
@@ -61,8 +58,7 @@
 
     function checkLimit() {
       const key = getTodayKey();
-      const count = parseInt(localStorage.getItem(key) || "0");
-      return count;
+      return parseInt(localStorage.getItem(key) || "0");
     }
 
     function incrementLimit() {
@@ -92,7 +88,7 @@
       resultBox.innerText = "AI is working on your text...";
 
       try {
-        // 🔒 安全调用：只请求我们自己的 Vercel 后端接口
+        // 🔒 安全调用：请求我们自己的 Vercel 后端云函数，前端不留任何 API Key！
         const response = await fetch("/api/rewrite", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
