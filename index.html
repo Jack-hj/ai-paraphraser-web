@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free AI Paraphraser | Instant Text Rewriter</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .container { background: var(--card-bg); width: 100%; max-width: 650px; border-radius: 16px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); border: 1px solid #334155; }
+    h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    p.subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
+    .badge { display: inline-block; background: rgba(99, 102, 241, 0.2); color: #a5b4fc; padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; margin-bottom: 16px; font-weight: 600; }
+    textarea { width: 100%; height: 140px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px; color: var(--text); font-size: 1rem; resize: vertical; outline: none; transition: border-color 0.2s; }
+    textarea:focus { border-color: var(--primary); }
+    button { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 12px; transition: opacity 0.2s; }
+    button:hover { opacity: 0.9; }
+    button:disabled { background: #475569; cursor: not-allowed; }
+    .result-box { margin-top: 24px; background: #0f172a; border-radius: 8px; padding: 16px; border: 1px solid #334155; min-height: 100px; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.6; }
+    .footer-tg { margin-top: 24px; text-align: center; font-size: 0.9rem; color: var(--text-muted); border-top: 1px solid #334155; padding-top: 16px; }
+    .footer-tg a { color: #818cf8; text-decoration: none; font-weight: 600; }
+    .footer-tg a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <span class="badge">⚡ 100% Free & No Login Needed</span>
+    <h1>AI Text Paraphraser</h1>
+    <p class="subtitle">Rewrite your text instantly to improve tone, clarity, and avoid plagiarism.</p>
+    
+    <textarea id="inputText" placeholder="Paste your English text here (Max 300 words)..."></textarea>
+    <button id="submitBtn" onclick="handleRewrite()">Paraphrase Now</button>
+    
+    <div class="result-box" id="resultBox">Your rewritten text will appear here...</div>
+
+    <div class="footer-tg">
+      💡 Need Unlimited Daily Rewrites & Pro API? 
+      <br>DM us on Telegram: <a href="https://t.me/qwer zxcvbnm" target="_blank">@你的TG用户名</a>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ 配置区域：替换你的配置
+    const API_KEY = "sk-a3af2ad5951e4c40be6ff03c02f3d3be"; // 填入你的 sk-xxx
+    const TG_HANDLE = "@qwer zxcvbnm"; // 替换你的 Telegram 用户名
+
+    const MAX_DAILY_LIMIT = 3;
+
+    function getTodayKey() {
+      const today = new Date().toISOString().split('T')[0];
+      return `usage_count_${today}`;
+    }
+
+    function checkLimit() {
+      const key = getTodayKey();
+      const count = parseInt(localStorage.getItem(key) || "0");
+      return count;
+    }
+
+    function incrementLimit() {
+      const key = getTodayKey();
+      const count = checkLimit();
+      localStorage.setItem(key, (count + 1).toString());
+    }
+
+    async function handleRewrite() {
+      const currentUsage = checkLimit();
+      const resultBox = document.getElementById("resultBox");
+      const inputText = document.getElementById("inputText").value.trim();
+
+      if (currentUsage >= MAX_DAILY_LIMIT) {
+        resultBox.innerHTML = `<span style="color: #ef4444;">⚠️ <strong>Daily free limit reached (${MAX_DAILY_LIMIT}/${MAX_DAILY_LIMIT}).</strong><br>Contact <a href="https://t.me/${TG_HANDLE.replace('@','')}" target="_blank" style="color: #818cf8;">${TG_HANDLE}</a> on Telegram for Unlimited Pro Access!</span>`;
+        return;
+      }
+
+      if (!inputText) {
+        alert("Please enter some text to paraphrase!");
+        return;
+      }
+
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = true;
+      btn.innerText = "Paraphrasing...";
+      resultBox.innerText = "AI is working on your text...";
+
+      try {
+        const response = await fetch("https://api.deepseek.com/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              { role: "system", content: "You are a professional native English editor. Paraphrase the user's text to make it natural, fluent, and compelling while maintaining its original meaning. Only output the paraphrased text." },
+              { role: "user", content: inputText }
+            ],
+            stream: false
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.choices && data.choices[0]) {
+          resultBox.innerText = data.choices[0].message.content;
+          incrementLimit();
+        } else {
+          resultBox.innerText = "Error: " + (data.error?.message || "Failed to process text.");
+        }
+      } catch (err) {
+        resultBox.innerText = "Network Error! Please try again later.";
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Paraphrase Now";
+      }
+    }
+  </script>
+</body>
+</html>
